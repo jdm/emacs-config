@@ -1,9 +1,18 @@
-(if (not (eq (string-match "23" (emacs-version)) nil))
-    (push '(font . "Liberation Mono-8") default-frame-alist)
-  (push '(font . "7x13") default-frame-alist))
+;(if (not (eq (string-match "23" (emacs-version)) nil))
+;    (push '(font . "Liberation Mono-8") default-frame-alist)
+;  (push '(font . "7x13") default-frame-alist))
 
-(add-to-list 'load-path (expand-file-name "~/.emacs.d/"))
-(setq load-path (append (list (expand-file-name "~/.emacs.d")) load-path))
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/lisp"))
+
+(require 'package)
+(add-to-list 'package-archives
+             '("melpa" . "https://melpa.org/packages/"))
+(package-initialize)
+
+(require 'rust-mode)
+(require 'lsp)
+
+(setq-default indent-tabs-mode nil)
 
 (defconst dave-c-style
   `(
@@ -120,7 +129,8 @@
 		("\\.cc$" . c++-mode)
 		("\\.hh$" . c++-mode)
 		("\\.h$"  . c++-mode)
-                ("\\.rs$" . ruse-mode))
+                ("\\.rs$" . rust-mode)
+                ("\\.jsm$" . js2-mode))
 	      auto-mode-alist))
 
 ;; Set stroustrup as the default style for C/C++ code
@@ -153,11 +163,6 @@
 
 (add-hook 'js2-mode-hook 'my-js2-mode-hook)
 
-(defun my-ruby-mode-hook ()
-  (define-key ruby-mode-map "\C-m" 'newline-and-indent))
-
-(add-hook 'ruby-mode-hook 'my-ruby-mode-hook)
-
 (defadvice yank (after indent-region activate)
   (let ((mark-even-if-inactive t))
     (if (member major-mode '(emacs-lisp-mode scheme-mode lisp-mode
@@ -169,9 +174,9 @@
 (transient-mark-mode 1)
 (display-battery-mode 1)
 (display-time-mode 1)
-(scroll-bar-mode nil)
-(menu-bar-mode nil)
-(tool-bar-mode nil)
+(scroll-bar-mode -1)
+(menu-bar-mode -1)
+(tool-bar-mode -1)
 
 ;(load-file "~/.xemacs/color-theme.el")
 (require 'color-theme)
@@ -215,7 +220,7 @@
              '(color-theme-zenburn "ZenBurn" 
                                    "Daniel Brockman <daniel@brockman.se>"))
 ;; load the color-theme elisp itself
-(load-file "~/.emacs.d/themes/zenburn.el")
+(load-file "~/.emacs.d/lisp/themes/zenburn.el")
 
 ;; activate it
 (color-theme-zenburn)
@@ -240,8 +245,8 @@
 ;(add-hook 'text-mode-hook 'pretty-greek)
 
 ;(load "~/.emacs.d/pretty-mode.el")
-(require 'pretty-mode)
-(global-pretty-mode 1)
+;(require 'pretty-mode)
+;(global-pretty-mode 1)
 ;(add-hook 'text-mode-hook 'turn-on-pretty-mode)
 
 ;(require 'lilypond-mode)
@@ -286,114 +291,37 @@
 ;;; interfacing with ELPA, the package archive.
 ;;; Move this code earlier if you want to reference
 ;;; packages in your .emacs.
-(when
-    (load
-     (expand-file-name "~/.emacs.d/elpa/package.el"))
-  (package-initialize))
+;(when
+;    (load
+;     (expand-file-name "~/.emacs.d/elpa/package.el"))
+;  (package-initialize))
 (custom-set-variables
-  ;; custom-set-variables was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
  '(browse-url-browser-function (quote browse-url-firefox))
  '(browse-url-firefox-new-window-is-tab t)
  '(browse-url-firefox-program "firefox")
  '(browse-url-generic-program "chromium-browser")
- '(erc-join-buffer (quote bury))
- '(erc-modules (quote (autojoin button completion fill irccontrols match menu netsplit noncommands readonly ring scrolltobottom services stamp track)))
  '(ido-everywhere t)
  '(js2-basic-offset 2)
  '(js2-bounce-indent-p t)
  '(js2-enter-indents-newline t)
  '(js2-indent-on-enter-key nil)
- '(js2-skip-preprocessor-directives t))
+ '(js2-skip-preprocessor-directives t)
+ '(password-cache-expiry nil))
 (custom-set-faces
-  ;; custom-set-faces was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- )
-
-(setq tls-program '("openssl s_client -connect %h:%p -no_ssl2 -ign_eof
-                                      -CAfile /home/t_mattjo/.private/CAs.pem 
-                                      -cert /home/t_mattjo/.private/jdm.pem" 
-		    "gnutls-cli --priority secure256 
-                                 --x509cafile /home/t_mattjo/.private/CAs.pem 
-                                 --x509certfile /home/t_mattjo/.private/jdm.pem -p %p %h" 
-		    "gnutls-cli --priority secure256 -p %p %h"))
-
-(require 'erc-log)
-(require 'erc-join)
-(require 'erc-match)
-(setq erc-keywords '("Revvy" "NichardRixon" "jdm" "j4matthe" "jdm-" "jdm`"))
-(setq erc-current-nick-highlight-type 'nick)
-(setq erc-track-exclude-types '("JOIN" "PART" "QUIT" "NICK" "MODE"))
-(setq erc-track-use-faces t)
-(setq erc-track-faces-priority-list
-      '(erc-current-nick-face erc-keyword-face erc-default-face erc-action-face))
-(setq erc-track-priority-faces-only 'all)
-
-;(setq erc-server "irc.esper.net"
-;      erc-port 6667
-;      erc-nick "Revvy"
-;      erc-prompt-for-password nil)
-(setq erc-server "irc.mozilla.org"
-      erc-port 6667
-      erc-nick "jdm"
-      erc-prompt-for-password nil)
-(erc-autojoin-mode 1)
-(setq erc-autojoin-channels-alist
-      '(;("freenode.net" "#jruby" "#mixxx")
-	("esper.net" "#batcafe" "#neocesspool")
-	("mozilla.org" "#content" "#mobile" "#static" "#foxymonkies" "#interns" "#jsapi" "#gfx" "#developers" "#rust" "#mozillians" "#coding" "#lounge" "#seneca" "#introduction")))
-(setq erc-auto-query 'window-noselect)
-
-(defface erc-header-line-disconnected
-  '((t (:foreground "black" :background "indianred")))
-  "Face to use when ERC has been disconnected.")
-
-(defun erc-update-header-line-show-disconnected ()
-  "Use a different face in the header-line when disconnected."
-  (erc-with-server-buffer
-    (cond ((erc-server-process-alive) 'erc-header-line)
-          (t 'erc-header-line-disconnected))))
-(setq erc-header-line-face-method 'erc-update-header-line-show-disconnected)
-
-(setq erc-log-channels-directory "~/.emacs.d/logs/")
-(setq erc-save-buffer-on-part nil)
-(setq erc-save-queries-on-quit nil
-      erc-log-write-after-send t
-      erc-log-write-after-insert t)
-(add-hook 'erc-insert-post-hook 'erc-save-buffer-in-logs)
-(erc-log-enable)
-
-;(defadvice save-buffers-kill-emacs (before save-logs (arg) activate)
-;  (save-some-buffers t (lambda () (when (and (eq major-mode 'erc-mode)
-;					(not (null buffer-file-name)))))))
-
-(defun erc-do-notify (msg)
-  (shell-command (concat "notify-send -t 0 \"" msg "\"")))
-
-(defun erc-notify-on-msg (msg)
-  (if (string-match "jdm:" msg)
-      (erc-do-notify msg)))
-
-(defun erc-notify-on-privmsg (proc parsed)
-  (let ((nick (car (erc-parse-user (erc-response.sender parsed))))
-	(target (car (erc-response.command-args parsed)))
-	(msg (erc-response.contents parsed)))
-    (when (and (erc-current-nick-p target)
-	       (not (erc-is-message-ctcp-and-not-action-p msg)))
-      (erc-do-notify msg)
-      nil)))
-
-(add-hook 'erc-insert-pre-hook 'erc-notify-on-msg)
-(add-hook 'erc-server-PRIVMSG-functions 'erc-notify-on-privmsg)
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(hl-line ((t (:inherit nil :background "gray20")))))
 
 (defun gse-prompt-to-compile-init-file ()
   (interactive)
   (if (and
-       (string-equal buffer-file-name "/home/t_mattjo/.emacs.d/init.el")
+       (string-equal buffer-file-name "/Users/jdm/.emacs.d/init.el")
        (file-newer-than-file-p "~/.emacs.d/init.el" "~/.emacs.d/init.elc")
        (y-or-n-p "byte-compile init.el? "))
       (byte-compile-file "~/.emacs.d/init.el")))
@@ -410,10 +338,15 @@
 
 (fset 'yes-or-no-p 'y-or-n-p)
 
-(highlight-parentheses-mode t)
-(require 'highline)
-(highline-mode-on)
-(set-face-background 'highline-face "#555")
+;(require 'highlight-parentheses)
+;(highlight-parentheses-mode 1)
+
+;(require 'highline)
+;(highline-mode-on)
+;(set-face-background 'highline-face "#555")
+
+(global-hl-line-mode 1)
+(set-face-background 'hl-line "gray20")
 
 (require 'smooth-scrolling)
 (setq smooth-scroll-margin 5)
@@ -486,18 +419,6 @@
 
 (setq split-height-threshold 500)
 
-(setq special-display-buffer-names
-      '("*compilation*" "*ack*"))
-
-(setq special-display-function
-      (lambda (buffer &optional args)
-	(save-excursion
-	  (save-selected-window
-	    (split-window)
-	    (switch-to-buffer buffer)
-	    (enlarge-window (- compilation-window-height (window-height)))
-	    (selected-window)))))
-
 (setq x-select-enable-clipboard t)
 (setq temporary-file-directory "~/.emacs.d/tmp/")
 (setq confirm-nonexistent-file-or-buffer nil)
@@ -528,7 +449,7 @@
  bookmark-save-flag 1)                        ;; autosave each change
 
 ;(load "starttls")
-(require 'tls)
+;(require 'tls)
 ;(setq starttls-use-gnutls t)
 ;(setq send-mail-function 'smtpmail-send-it
 ;      message-send-mail-function 'smtpmail-send-it
@@ -556,17 +477,17 @@
      (list (line-beginning-position)
 	   (line-beginning-position 2)))))
 
-(autoload 'cycle-buffer "cycle-buffer" "Cycle forward." t)
-(autoload 'cycle-buffer-backward "cycle-buffer" "Cycle backward." t)
-(autoload 'cycle-buffer-permissive "cycle-buffer" "Cycle forward allowing *buffers*." t)
-(autoload 'cycle-buffer-backward-permissive "cycle-buffer" "Cycle backward allowing *buffers*." t)
-(autoload 'cycle-buffer-toggle-interesting "cycle-buffer" "Toggle if this buffer will be considered." t)
-(global-set-key [(f1)]        'cycle-buffer-backward)
-(global-set-key [(f2)]        'cycle-buffer)
-(global-set-key [(shift f1)]  'cycle-buffer-backward-permissive)
-(global-set-key [(shift f2)]  'cycle-buffer-permissive)
+;(autoload 'cycle-buffer "cycle-buffer" "Cycle forward." t)
+;(autoload 'cycle-buffer-backward "cycle-buffer" "Cycle backward." t)
+;(autoload 'cycle-buffer-permissive "cycle-buffer" "Cycle forward allowing *buffers*." t)
+;(autoload 'cycle-buffer-backward-permissive "cycle-buffer" "Cycle backward allowing *buffers*." t)
+;(autoload 'cycle-buffer-toggle-interesting "cycle-buffer" "Toggle if this buffer will be considered." t)
+;(global-set-key [(f1)]        'cycle-buffer-backward)
+;(global-set-key [(f2)]        'cycle-buffer)
+;(global-set-key [(shift f1)]  'cycle-buffer-backward-permissive)
+;(global-set-key [(shift f2)]  'cycle-buffer-permissive)
 
-(load-file "~/.emacs.d/word-count.el")
+;(load-file "~/.emacs.d/word-count.el")
 
 (defun goto-match-paren (arg)
   "Go to the matching parenthesis if on parenthesis. Else go to the
@@ -631,3 +552,17 @@
    " *\n"
    " * ***** END LICENSE BLOCK ***** */\n"))
 (global-set-key "\C-xg" 'insert-mpl-tri-license)
+
+(require 'tramp)
+(defun tramp-set-auto-save ()
+  (auto-save-mode -1))
+
+(setq mac-option-key-is-meta nil)
+(setq mac-command-key-is-meta t)
+(setq mac-command-modifier 'meta)
+(setq mac-option-modifier nil)
+
+(mapc
+ (lambda (face)
+   (set-face-attribute face nil :weight 'normal :underline nil))
+ (face-list))
